@@ -4,6 +4,7 @@ import random
 import os
 import multiprocessing
 import getch
+import sys
 
 
 
@@ -34,7 +35,7 @@ def board():
     """
     global window_xsize,window_ysize,score
     random_color=random.choice(colors)
-    os.system('clear')
+    os.system('cls' if os.name=='nt' else 'clear')
     print("{loc}{val}".format(val=food.cell_value,loc=pos(food.Xpos,food.Ypos)),end='')
     for i in snake:
         print("{col}{loc}{val}".format(col=random_color,loc=pos(i.Xpos,i.Ypos),val=i.cell_value))
@@ -145,6 +146,24 @@ def dir_input(direction,game_over,lock,moved):
 #start of main() function
 def main():
     init(autoreset=True)
+    os.system('cls' if os.name == 'nt' else 'clear')
+    print("\t \t Snake")
+    print("==============")
+    print("W - to move up")
+    print("S - to move down")
+    print("A - to move left")
+    print("D - to move right")
+    print("==============")
+    while True:
+            print('press Y to Start the game and N to exit:  ',end="")
+            x = getch.getche()
+            print("")
+            if x== 'Y' or x=='N' or x=='y' or x=='n':
+                break
+            else:
+                print("wrong input try again")
+    if x=='n' or x=='N':
+        sys.exit()
     game_over = multiprocessing.Value('i')
     game_over.value = 0
     direction = multiprocessing.Value('i')
