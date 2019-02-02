@@ -10,7 +10,7 @@ import sys
 
 
 class Cell(object):
-    cell_value="[]"
+    cell_value="██"
     def __init__(self,Xpos,Ypos):
         self.Xpos=Xpos
         self.Ypos=Ypos
