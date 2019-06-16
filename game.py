@@ -1,182 +1,217 @@
+#!/usr/bin/env python
+
 from colorama import *
 import time
 import random
 import os
-import multiprocessing
-import getch
 import sys
+import getch
+import multiprocessing
 
-
-
-
-class Cell(object):
-    cell_value="██"
-    def __init__(self,Xpos,Ypos):
-        self.Xpos=Xpos
-        self.Ypos=Ypos
-
-    def __str__(self):
-        return 'Xposition:'+str(self.Xpos)+' Ypostition'+str(self.Ypos)
 
 #start of pos() funciton
 def pos(x,y):
-    """
-    takes integers as arguements and returns a escape sequence string for position
-    """
     return '\x1b['+str(y)+';'+str(x)+'H'
 #end of pos() function
 
 
-#start of board() function
-#plots the snake in terminal
-def board():
-    """
-    takes no arguements
-    """
-    global window_xsize,window_ysize,score
+#start of display() function
+#displays the game
+def display():
+    global board,board_width,board_height
     random_color=random.choice(colors)
     os.system('cls' if os.name=='nt' else 'clear')
-    print("{loc}{val}".format(val=food.cell_value,loc=pos(food.Xpos,food.Ypos)),end='')
-    for i in snake:
-        print("{col}{loc}{val}".format(col=random_color,loc=pos(i.Xpos,i.Ypos),val=i.cell_value))
-    print("{loc}========================================".format(loc=pos(1,window_ysize+1)))
-    print("{loc}Score : {scor}".format(loc=pos(1,window_ysize+2),scor=score))
-    print("{loc}HighScore :in the next update".format(loc=pos(1,window_ysize+3)))
-#end of board() function
+    for _ in board:
+        for element in _ :
+            if element == 'u' or element == 'l' or element == 'd' or element == 'r':
+                print("{col}██".format(col=random_color),end='')
+            if element == 'w':
+                print("██".format(col=random_color),end='')
+            if element == 'f':
+                print("🔵".format(col=random_color),end='')
+            if element == 'o':
+                print('  ',end ='')
+        print()
+
+#end of display() function
 
 
 #start of movement() function
-#checks the next position the snake is going to move based on dirction it has
-def movement(direction,game_over,lock,moved):
-    """
-    takes 4 arguements
-    direction(Shared Object),game_over(Shared object),lock(Lock object),moved(Shared Object)
+#checks the next position the snake is going to move based on direction it has
+def movement():
+    global next_pos,head,tail
+    game_over = False
+    while not game_over:
+        display()
+        direction = dir_object.value.decode("utf-8")
+        if direction  == 'u':
+            next_pos =(head[0]-1,head[1])
+        elif direction  == 'd':
+            next_pos =(head[0]+1,head[1])
+        elif direction  == 'l':
+            next_pos =(head[0],head[1]-1)
+        elif direction  == 'r':
+            next_pos =(head[0],head[1]+1)
 
-    """
-    global next_pos , snake ,colors,food,window_xsize,window_ysize,window_size,snake_pos,score
-    while not game_over.value:
-        board()
-        if(chr(direction.value).upper()=='W'):
-            next_pos =((snake[0].Xpos),(snake[0].Ypos)-1)
-            moved.value=1
-        elif(chr(direction.value).upper()=='A'):
-            next_pos =((snake[0].Xpos)-2,(snake[0].Ypos))
-            moved.value=1
-        elif(chr(direction.value).upper()=='S'):
-            next_pos =((snake[0].Xpos),(snake[0].Ypos)+1)
-            moved.value=1
-        elif(chr(direction.value).upper()=='D'):
-            next_pos =((snake[0].Xpos)+2,(snake[0].Ypos))
-            moved.value=1
+        if board[next_pos[0]][next_pos[1]] == 'f':
+            board[head[0]][head[1]] = direction
+            board[next_pos[0]][next_pos[1]] = direction
+            head = next_pos
+            empty_spaces = list()
+            for _ in board:
+                empty_spaces.append([index for index, value in enumerate(_) if value == 'o'])
 
-        if next_pos == (food.Xpos,food.Ypos):
-            score+=1
-            cell_obj=Cell(next_pos[0],next_pos[1])
-            snake.insert(0,cell_obj)
-            random_pos=random.choice(list(set(window_size).difference(set(snake))))
-            food=Cell(random_pos[0],random_pos[1])
-
-        elif any(map(lambda x : x.Xpos==next_pos[0]and x.Ypos==next_pos[1],snake)) or window_size.count(next_pos)==0:
-            lock.acquire()
-            game_over.value=1
-            lock.release()
-
+            while(1):
+                try:
+                    random_row = random.randint(0,len(empty_spaces)-1)
+                    random_index = (random_row,random.choice(empty_spaces[random_row]))
+                    board[random_index[0]][random_index[1]] = 'f'
+                    break
+                except:
+                    pass
+        elif board[next_pos[0]][next_pos[1]] != 'o' and board[next_pos[0]][next_pos[1]] != 'f':
+            game_over = True
+            print("Game_over")
+            time.sleep(1)
+            #blink()
         else:
-            snake.insert(0,Cell(next_pos[0],next_pos[1]))
-            snake.pop()
-        time.sleep(0.1)
+            board[head[0]][head[1]] = direction
+            board[next_pos[0]][next_pos[1]] = direction
+            head = next_pos
+            if board[tail[0]][tail[1]]=='u':
+                board[tail[0]][tail[1]]='o'
+                tail = (tail[0]-1,tail[1])
+            elif board[tail[0]][tail[1]]=='d':
+                board[tail[0]][tail[1]]='o'
+                tail = (tail[0]+1,tail[1])
+            elif board[tail[0]][tail[1]]=='l':
+                board[tail[0]][tail[1]]='o'
+                tail = (tail[0],tail[1]-1)
+            elif board[tail[0]][tail[1]]=='r':
+                board[tail[0]][tail[1]]='o'
+                tail = (tail[0],tail[1]+1)
 
+        time.sleep(0.1)
 #end of movement() function
+    status.value = 0
 
 
 #start of game_start() function
-#starts the game by initializing some variables(runs as a seperate process)
-def game_start(direction,game_over,lock,moved):
-    """
-    takes 4 arguements
-    direction(Shared Object),game_over(Shared object),lock(Lock object),moved(Shared Object)
+def game_start(sv1,sv2,sv3,level=None):
 
-    """
-    global next_pos , snake ,colors,food,window_xsize,window_ysize,window_size,score
-    score=0
-    window_xsize=40
-    window_ysize=20
-    print("\x1b[8;{y};{x}t".format(y=(window_ysize+5), x=window_xsize))
-    window_size=list()
-    global i,j
-    i=1
-    while i<=window_xsize:
-        j=1
-        while j<=window_ysize:
-            window_size.append((i,j))
-            j+=1
-        i+=2
-    window_size=list(set(window_size))
-    next_pos=tuple()
-    snake =list()
-    cell_obj= Cell(3,3)
-    snake.append(cell_obj)
-    cell_obj=Cell(1,3)
-    snake.append(cell_obj)
-    random_pos=random.choice(list(set(window_size).difference(set(snake))))
-    food=Cell(random_pos[0],random_pos[1])
+    global dir_object,lock,status,next_pos,colors,score
+    global head,tail,board,board_width,board_height
+
+    dir_object = sv1
+    lock = sv2
+    status = sv3
+
+    score = 0
+    if(level == None):
+        board = [
+        ['w','w','w','w','w','w','w','w','w','w','w','w','w','w','w','w'],
+        ['w','o','o','o','o','o','o','o','o','o','o','o','o','o','o','w'],
+        ['w','o','o','o','o','o','o','o','o','o','o','o','o','o','o','w'],
+        ['w','o','o','o','o','o','o','o','o','o','o','o','o','o','o','w'],
+        ['w','o','o','o','o','o','o','o','o','o','o','o','o','o','o','w'],
+        ['w','o','o','r','r','o','o','o','o','o','o','o','o','o','o','w'],
+        ['w','o','o','o','o','o','o','o','o','o','o','o','o','o','o','w'],
+        ['w','o','o','o','o','o','o','o','o','o','o','o','o','o','o','w'],
+        ['w','o','o','o','o','o','o','o','o','o','o','o','o','o','o','w'],
+        ['w','o','o','o','o','o','o','o','o','o','o','o','o','o','o','w'],
+        ['w','o','o','o','o','o','o','o','o','o','o','o','o','o','o','w'],
+        ['w','o','o','o','o','o','o','o','o','o','o','o','o','o','o','w'],
+        ['w','o','o','o','o','o','o','o','o','o','o','o','o','o','o','w'],
+        ['w','o','o','o','o','o','o','o','o','o','o','o','o','o','o','w'],
+        ['w','o','o','o','o','o','o','o','o','o','o','o','o','o','o','w'],
+        ['w','o','o','o','o','o','o','o','o','o','o','o','o','o','o','w'],
+        ['w','w','w','w','w','w','w','w','w','w','w','w','w','w','w','w'],
+        ]
+        # w - wall
+        # r - body of snake moving right
+        # l - body of snake moving left
+        # u - body of snake moving up
+        # d - body of snake moving down
+        # f - food
+        # o - empty space
+
+        board_height = len(board)
+        board_width =  len(board[board_height-1])
+        head = (5,4)
+        tail = (5,3)
+
+    else:
+        pass
+    print("\x1b[8;{y};{x}t".format(y=board_height+5, x=board_width))
+
+    empty_spaces = list()
+    for _ in board:
+        empty_spaces.append([index for index, value in enumerate(_) if value == 'o'])
+
+    while(1):
+        try:
+            random_row = random.randint(0,len(empty_spaces)-1)
+            random_index = (random_row,random.choice(empty_spaces[random_row]))
+            board[random_index[0]][random_index[1]] = 'f'
+            break
+        except:
+            pass
+
     colors=[Fore.BLACK,Fore.BLUE,Fore.CYAN,Fore.GREEN,Fore.YELLOW,Fore.MAGENTA,Fore.RED]
-    movement(direction,game_over,lock,moved)
+
+    movement()
 #end of game_start() function
 
-#start of dir_input() function
-#takes userinput till the game completes (runs as a different process)
-def dir_input(direction,game_over,lock,moved):
-    """
-    takes 4 arguements
-    direction(Shared Object),game_over(Shared object),lock(Lock object),moved(Shared Object)
-
-    """
-    while not game_over.value:
-        x=str(getch.getch()).upper()
-        if(x=='W' or x=='S' or x=='A' or x=='D')and moved.value==1:
+#start of keypress() function
+def keypress(dir_object,lock,status):
+    while(status.value == 1):
+        key = getch.getch()
+        direction = dir_object.value.decode("utf-8")
+        try:
             lock.acquire()
-            y=chr(direction.value).upper()
-            if((y=='S' and x!='W')or (y=='A' and x!='D') or (y=='D' and x!='A') or(y=='W' and x!='S')):
-                direction.value=ord(x)
-                moved.value=0
+            if key.lower() == 'w' and direction !='d':
+                dir_object.value = b'u'
+            elif key.lower() == 'a'and direction !='r':
+                dir_object.value = b'l'
+            elif key.lower() == 's'and direction !='u':
+                dir_object.value = b'd'
+            elif key.lower() == 'd'and direction !='l':
+                dir_object.value = b'r'
             lock.release()
+
+        except:
+            lock.release()
+
 #end of dir_input() function
+
+
 
 #start of main() function
 def main():
+    sys.stdout.write('\33]0;* Disco-Snake *\a')
     init(autoreset=True)
     os.system('cls' if os.name == 'nt' else 'clear')
-    print("\t \t Snake")
-    print("==============")
-    print("W - to move up")
+    print("W - to move up ")
     print("S - to move down")
     print("A - to move left")
     print("D - to move right")
     print("==============")
-    while True:
-            print('press Y to Start the game and N to exit:  ',end="")
-            x = getch.getche()
-            print("")
-            if x== 'Y' or x=='N' or x=='y' or x=='n':
-                break
-            else:
-                print("wrong input try again")
-    if x=='n' or x=='N':
-        sys.exit()
-    game_over = multiprocessing.Value('i')
-    game_over.value = 0
-    direction = multiprocessing.Value('i')
-    direction.value=ord('D')
-    moved = multiprocessing.Value('i')
-    moved.Value=0
+    print("Keep Your fingers ready & Press any Key")
+    x=getch.getch()
+
+    dir_object = multiprocessing.Value('c', 1)
+    dir_object.value = b'r'
+    status = multiprocessing.Value('i', 1)
+    status.value = 1
+    # creating a lock object
     lock = multiprocessing.Lock()
-    process1=multiprocessing.Process(target=dir_input,args=(direction,game_over,lock,moved))
-    process2=multiprocessing.Process(target=game_start,args=(direction,game_over,lock,moved))
-    process1.start()
-    process2.start()
-    process1.join()
-    process2.join()
+    # creating new processes
+    p1 = multiprocessing.Process(target=keypress, args=(dir_object,lock,status))
+    p2 = multiprocessing.Process(target=game_start, args=(dir_object,lock,status))
+
+
+    p1.start()
+    p2.start()
 #end of main() function
 
 if __name__=="__main__":
