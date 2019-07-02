@@ -1,3 +1,14 @@
 # DiscoSnake
 
-Snake Game which can be played from terminal using W,A,S,D keys.
+DiscoSnake is a the same old game which you have played in your old mobile phones.
+You can feel nostalgic by playing.
+
+
+Instructions:
+* Use W,A,S,D keys to move.
+* Feed the snake so that it grows. 
+* Avoid hitting wall in all Circumstances
+
+If you find any bugs. Please report it.
+
+
