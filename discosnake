@@ -28,7 +28,7 @@ def display():
             if element == 'w':
                 print("██".format(col=random_color),end='')
             if element == 'f':
-                print("🔵".format(col=random_color),end='')
+                print("██".format(col=random_color),end='')
             if element == 'o':
                 print('  ',end ='')
         print()
