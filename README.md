@@ -11,4 +11,4 @@ Instructions:
 
 If you find any bugs. Please report it.
 
-
+Feel free to contribute to the project.
